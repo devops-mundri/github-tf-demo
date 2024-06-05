@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
   terraform:
@@ -36,14 +37,42 @@ jobs:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      - name: Request Manual Approval
+        uses: actions/github-script@v6
+        id: approval
+        with:
+          script: |
+            const { user } = await github.rest.users.getByUsername({ username: context.actor });
+            const message = `Terraform plan is ready. Do you want to proceed with applying the changes? Approver: @${user.login}`;
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Manual Approval Needed',
+              body: message,
+            });
+            return issue.data.html_url;
+
+      - name: Wait for Approval
+        uses: actions/github-script@v6
+        id: wait
+        with:
+          script: |
+            const issue_url = steps.approval.outputs.result;
+            console.log(`Approval requested: ${issue_url}`);
+            console.log('Waiting for approval...');
+            // Simulate wait for approval, in real scenario this would be more complex
+            await new Promise(resolve => setTimeout(resolve, 60000));  // Wait for 1 minute for example
+            return 'approved';  // In real scenario, you would check for actual approval
+
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: steps.wait.outputs.result == 'approved'
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Output
+        if: steps.wait.outputs.result == 'approved'
         run: terraform output
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
