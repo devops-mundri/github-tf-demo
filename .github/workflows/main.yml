@@ -49,7 +49,7 @@ jobs:
               owner: 'devops-mundri',
               repo: 'github-tf-demo',
               title: 'Manual Approval Needed',
-              body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
+              body: 'Terraform plan is ready. Please approve this issue to proceed with applying the changes.',
             });
             return issue.number;
         env:
@@ -57,33 +57,16 @@ jobs:
 
       - name: Wait for Approval
         id: wait_for_approval
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const issue_number = core.getInput('create_issue.output');
-            let approved = false;
-            while (!approved) {
-              const { data: issue } = await github.rest.issues.get({
-                owner: 'devops-mundri',
-                repo: 'github-tf-demo',
-                issue_number,
-              });
-              if (issue.state === 'closed') {
-                approved = true;
-              } else {
-                console.log('Waiting for approval...');
-                await new Promise(resolve => setTimeout(resolve, 60000));  // Wait for 1 minute
-              }
-            }
-            return 'approved';
-
-      - name: Manual Approval
-        if: steps.wait_for_approval.outputs.result == 'approved'
-        uses: infrabot/approvals@v1
-        with:
-          message: 'Terraform plan is ready. Approve to proceed with applying the changes.'
-          approved_message: 'Terraform plan approved. Proceeding with applying the changes.'
-          actions: 'approve'
+        run: |
+          while : ; do
+            sleep 60
+            APPROVAL=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }} | jq -r '.state')
+            if [ "$APPROVAL" == "closed" ]; then
+              echo "Approved!"
+              break
+            fi
+            echo "Waiting for approval..."
+          done
 
       - name: Terraform Apply
         if: steps.wait_for_approval.outputs.result == 'approved'
