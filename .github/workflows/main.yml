@@ -83,7 +83,7 @@ jobs:
         with:
           message: 'Terraform plan is ready. Approve to proceed with applying the changes.'
           approved_message: 'Terraform plan approved. Proceeding with applying the changes.'
-          actions: ['approve']
+          actions: 'approve'
 
       - name: Terraform Apply
         if: steps.wait_for_approval.outputs.result == 'approved'
