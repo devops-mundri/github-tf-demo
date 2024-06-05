@@ -49,7 +49,7 @@ jobs:
               owner: 'devops-mundri',
               repo: 'github-tf-demo',
               title: 'Manual Approval Needed',
-              body: 'Terraform plan is ready. Please approve this issue to proceed with applying the changes.',
+              body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
             });
             return issue.number;
         env:
@@ -63,10 +63,12 @@ jobs:
             APPROVAL=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }} | jq -r '.state')
             if [ "$APPROVAL" == "closed" ]; then
               echo "Approved!"
+              echo "::set-output name=result::approved"
               break
             fi
             echo "Waiting for approval..."
           done
+        continue-on-error: true
 
       - name: Terraform Apply
         if: steps.wait_for_approval.outputs.result == 'approved'
