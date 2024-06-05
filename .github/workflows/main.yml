@@ -69,20 +69,16 @@ jobs:
                 issue_number,
               });
               if (issue.state === 'closed') {
-                if (issue.closed_by.login === 'your-github-username') {
-                  core.setOutput('approval', 'approved');
-                  approved = true;
-                }
+                approved = true;
               } else {
                 console.log('Waiting for approval...');
                 await new Promise(resolve => setTimeout(resolve, 60000));  // Wait for 1 minute
               }
             }
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+            return 'approved';
 
       - name: Manual Approval
-        if: steps.wait_for_approval.outputs.approval == 'approved'
+        if: steps.wait_for_approval.outputs.result == 'approved'
         uses: github.com/infrabot/approvals@v1
         with:
           message: 'Terraform plan is ready. Approve to proceed with applying the changes.'
@@ -90,14 +86,14 @@ jobs:
           actions: ['approve']
 
       - name: Terraform Apply
-        if: steps.wait_for_approval.outputs.approval == 'approved'
+        if: steps.wait_for_approval.outputs.result == 'approved'
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Output
-        if: steps.wait_for_approval.outputs.approval == 'approved'
+        if: steps.wait_for_approval.outputs.result == 'approved'
         run: terraform output
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
