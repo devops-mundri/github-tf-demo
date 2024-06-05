@@ -78,6 +78,8 @@ jobs:
                 await new Promise(resolve => setTimeout(resolve, 60000));  // Wait for 1 minute
               }
             }
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Manual Approval
         if: steps.wait_for_approval.outputs.approval == 'approved'
