@@ -3,8 +3,11 @@ name: Terraform
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
+
+permissions:
+  issues: write  # Grant permission to create and modify issues
 
 jobs:
   terraform:
@@ -49,6 +52,8 @@ jobs:
               body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
             });
             return issue.number;
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Wait for Approval
         id: wait_for_approval
