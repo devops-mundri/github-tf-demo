@@ -46,8 +46,8 @@ jobs:
         with:
           script: |
             const { data: issue } = await github.rest.issues.create({
-              owner: devops-mundri,
-              repo: github-tf-demo,
+              owner: 'devops-mundri',
+              repo: 'github-tf-demo',
               title: 'Manual Approval Needed',
               body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
             });
@@ -64,8 +64,8 @@ jobs:
             let approved = false;
             while (!approved) {
               const { data: issue } = await github.rest.issues.get({
-                owner: devops-mundri,
-                repo: github-tf-demo,
+                owner: 'devops-mundri',
+                repo: 'github-tf-demo',
                 issue_number,
               });
               if (issue.state === 'closed') {
