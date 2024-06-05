@@ -79,7 +79,7 @@ jobs:
 
       - name: Manual Approval
         if: steps.wait_for_approval.outputs.result == 'approved'
-        uses: github.com/infrabot/approvals@v1
+        uses: infrabot/approvals@v1
         with:
           message: 'Terraform plan is ready. Approve to proceed with applying the changes.'
           approved_message: 'Terraform plan approved. Proceeding with applying the changes.'
