@@ -73,8 +73,11 @@ jobs:
             fi
 
             # Fetch the labels of the approval issue from GitHub API
-            LABELS=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-              https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }}/labels | jq -r '.[].name')
+            RESPONSE=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+              https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }}/labels)
+            echo "API Response: $RESPONSE"  # Print the response for debugging
+
+            LABELS=$(echo "$RESPONSE" | jq -r 'map(.name) | join(" ")')
 
             if echo "$LABELS" | grep -q "approved"; then
               echo "Approved!"
@@ -104,4 +107,4 @@ jobs:
         run: terraform output
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACC
