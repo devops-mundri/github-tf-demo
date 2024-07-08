@@ -49,7 +49,7 @@ jobs:
               owner: 'devops-mundri',
               repo: 'github-tf-demo',
               title: 'Manual Approval Needed',
-              body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
+              body: 'Terraform plan is ready. Please review and add the "approved" or "abort" label to this issue.',
             });
             return { id: issue.number };
         env:
@@ -72,17 +72,20 @@ jobs:
               exit 1
             fi
 
-            # Fetch the approval state from GitHub API
-            APPROVAL=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-              https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }} | jq -r '.state')
+            # Fetch the labels of the approval issue from GitHub API
+            LABELS=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+              https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }}/labels | jq -r '.[].name')
 
-            if [ "$APPROVAL" == "closed" ]; then
+            if echo "$LABELS" | grep -q "approved"; then
               echo "Approved!"
               echo "::set-output name=result::approved"
               break
+            elif echo "$LABELS" | grep -q "abort"; then
+              echo "Aborted by reviewer."
+              exit 1
             fi
 
-            echo "Waiting for approval..."
+            echo "Waiting for approval or abort label..."
             sleep 60
           done
         env:
