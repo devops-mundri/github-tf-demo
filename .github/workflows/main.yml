@@ -51,23 +51,42 @@ jobs:
               title: 'Manual Approval Needed',
               body: 'Terraform plan is ready. Approve to proceed with applying the changes.',
             });
-            return issue.number;
+            return { id: issue.number };
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
       - name: Wait for Approval
         id: wait_for_approval
         run: |
-          while : ; do
-            sleep 60
-            APPROVAL=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }} | jq -r '.state')
+          # Setting a timeout of 3600 seconds (1 hour) for the entire script
+          TIMEOUT=3600
+          START_TIME=$(date +%s)
+
+          while true; do
+            # Check the current time to implement the timeout mechanism
+            CURRENT_TIME=$(date +%s)
+            ELAPSED_TIME=$(( CURRENT_TIME - START_TIME ))
+
+            if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
+              echo "Timeout reached. Exiting..."
+              exit 1
+            fi
+
+            # Fetch the approval state from GitHub API
+            APPROVAL=$(curl -s -X GET -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+              https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }} | jq -r '.state')
+
             if [ "$APPROVAL" == "closed" ]; then
               echo "Approved!"
               echo "::set-output name=result::approved"
               break
             fi
+
             echo "Waiting for approval..."
+            sleep 60
           done
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         continue-on-error: true
 
       - name: Terraform Apply
