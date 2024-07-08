@@ -62,6 +62,8 @@ jobs:
           TIMEOUT=3600
           START_TIME=$(date +%s)
 
+          echo "Checking issue at: https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }}/labels"
+
           while true; do
             # Check the current time to implement the timeout mechanism
             CURRENT_TIME=$(date +%s)
