@@ -77,6 +77,12 @@ jobs:
               https://api.github.com/repos/devops-mundri/github-tf-demo/issues/${{ steps.create_issue.outputs.id }}/labels)
             echo "API Response: $RESPONSE"  # Print the response for debugging
 
+            # Check if the response contains the "Not Found" message
+            if echo "$RESPONSE" | grep -q "Not Found"; then
+              echo "Error: Issue not found or authentication failed. Please check the repository, issue number, and authentication token."
+              exit 1
+            fi
+
             LABELS=$(echo "$RESPONSE" | jq -r 'map(.name) | join(" ")')
 
             if echo "$LABELS" | grep -q "approved"; then
