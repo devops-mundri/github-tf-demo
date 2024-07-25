@@ -4,7 +4,7 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-resource "aws_s3_bucket" "my_bucket" {
+resource "aws_s3_bucket_acl" "my_bucket_acl" {
   bucket = "my-unique-bucket-name"
   acl    = "private"
 }
