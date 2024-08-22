@@ -4,7 +4,10 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-resource "aws_s3_bucket_acl" "my_bucket_acl" {
-  bucket = "my-unique-bucket-name"
-  acl    = "private"
+resource "aws_instance" "web" {
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "Terraform"
+  }
 }
